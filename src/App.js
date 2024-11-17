@@ -1,67 +1,60 @@
-import './App.css';
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import Loading from './Loading';
-function App() {
-  
-  const exampleData = { 
-    "BPDataList": [
-      {
-        "HP": 120,
-        "HR": 80,
-        "LP": 80,
-      }
-    ]
+import React, { useState } from "react";
+
+async function getData() {
+  const url = "/"; // Replace with the actual API endpoint
+  console.log('URL:', url);
+  try {
+    const response = await fetch(url);
+    console.log('Response:', response);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+
+    const json = await response.json();
+    return json; // Return the fetched data
+  } catch (error) {
+    console.error(error.message);
+    throw error; // Rethrow the error to handle it in the caller
   }
-  const [data, setData] = useState({ HR: '', LP: '', HP: '' });
-
-  // using exampleData for testing
-  useEffect(() => {
-    setData(exampleData['BPDataList'][0]);
-  }, []);
-  
-  const [loading, setLoading] = useState(true);
-
-  // simulating loading time to see the spinner
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, []);
-
-
-
-/*
-  useEffect(() => {
-    setLoading(true);
-    axios.get('/api/data') //put our actual api endpoint here
-      .then(response => {
-        setData(response.data['BPDataList'][0]);
-        setLoading(false);
-      })
-      .catch(error => {
-        console.error('Error fetching data:', error);
-        setLoading(false);
-      });
-  }, []);
-    */
-if (loading) {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <h1> Measuring </h1>
-        <Loading />
-      </header>
-    </div>
-  );
 }
+
+function App() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Function to handle fetching data
+  const handleFetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null); // Reset error state before fetching
+      const fetchedData = await getData();
+      setData(fetchedData);
+    } catch (err) {
+      setError("Failed to fetch data. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1> Heart Rate: {data.HR} </h1> 
-        <h2> Blood Pressure: {data.HP} / {data.LP} </h2>
-      </header>
+    <div>
+      <button onClick={handleFetchData} disabled={loading}>
+        {loading ? "Loading..." : "Fetch Data"}
+      </button>
+
+      {error && <div style={{ color: "red" }}>Error: {error}</div>}
+
+      {data ? (
+        <div>
+          <h1>Heart Rate: {data.BPDataList[0].HR}</h1>
+          <h2>
+            Blood Pressure: {data.BPDataList[0].HP}/{data.BPDataList[0].LP}
+          </h2>
+        </div>
+      ) : (
+        !loading && <p>No data fetched yet.</p>
+      )}
     </div>
   );
 }
