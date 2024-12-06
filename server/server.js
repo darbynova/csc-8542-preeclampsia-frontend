@@ -20,6 +20,10 @@ app.get('/get-blood-pressure', (req, res) => {
   }
 });
 
+app.get('/demo', (req, res) => {
+  res.redirect('http://localhost:8080');
+});
+
 app.use(express.static(path.join(__dirname, '../build')));
 
 app.get('*', (req, res) => {
